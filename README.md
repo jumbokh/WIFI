@@ -1,32 +1,4 @@
 WIFI ESP8266
-====
-
-Metodo I
 ==
-AT+CWJAP="Silver-Ink","MYBSJH2014"
+(http://www.sistemasorp.es/2014/10/07/probando-el-modulo-wifi-esp8266/)
 
-AT+CIPMUX=0
-
-AT+CIFSR
-
-AT+CIPSTART="TCP","104.131.170.169",80
-
-AT+CIPSEND=50
-
-GET /test.html HTTP/1.0
-
-Host: samuelluis.net
-
-AT+CIPCLOSE
-
-Metodo II
-==
-AT+CIPMUX=0
-
-AT+CIPMODE=1
-
-AT+CIPSTART="TCP","192.168.1.21",9000
-
-AT+CIPSEND
-
-+++
