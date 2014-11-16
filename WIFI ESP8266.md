@@ -3,6 +3,10 @@ WIFI ESP8266
 
 Metodo I
 =====
+AT+RST
+
+AT+CWMODE=1
+
 AT+CWJAP="Silver-Ink","MYBSJH2014"
 
 AT+CIPMUX=0
