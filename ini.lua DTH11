@@ -1,0 +1,61 @@
+--    Test communication of DHT sensor
+--    Tested with Lua NodeMCU 0.9.5 build 20150127 floating point !!!
+-- 1. Flash Lua NodeMCU to ESP module.
+-- 2. Set in program wots.lua humidity sensor type. This is parameter typeSensor="dht11" or "dht22".
+-- 3. Load program wots.lua and testdht.lua to ESP8266 with LuaLoader
+-- 4. HW reset module
+-- 5. Run program wots.lua - dofile(wots.lua)
+
+
+sensorType="dht11"             -- set sensor type dht11 or dht22
+
+    PIN = 3 --  data pin, GPIO2
+    humi=0
+    temp=0
+    fare=0
+    --load DHT module for read sensor
+function ReadDHT()
+    dht=require("testdht")
+    dht.read(PIN)
+    chck=1
+    h=dht.getHumidity()
+    t=dht.getTemperature()
+    if h==nil then h=0 chck=0 end
+    if sensorType=="dht11"then
+        humi=h/256
+        temp=t/256
+    else
+        humi=h/10
+        temp=t/10
+    end
+    fare=(temp*9/5+32)
+    print("Humidity:    "..humi.."%")
+    print("Temperature: "..temp.." deg C")
+    -- release module
+    dht=nil
+    package.loaded["testdht"]=nil
+end
+ReadDHT()
+tmr.alarm(1,60000,1,function()ReadDHT()count=count+1 if count==5 then count=0 wifi.sta.connect()print("Reconnect")end end)
+
+srv=net.createServer(net.TCP) srv:listen(80,function(conn)
+    conn:on("receive",function(conn,payload)
+    --print(payload) -- for debugging only
+    strstr={string.find(payload,"GET / HTTP/1.1")}
+    if(strstr[1]~=nil)then
+    --generates HTML web site
+    conn:send('HTTP/1.1 200 OK\r\nConnection: keep-alive\r\nCache-Control: private, no-store\r\n\r\n\
+    <!DOCTYPE HTML>\
+    <html><head><meta content="text/html;charset=utf-8"><title>ESP8266</title></head>\
+    <body bgcolor="#ffe4c4"><h2>Hygrometer BONTIX<br></h2>\
+    <IMG SRC="http://samuelluis.net/bontix-logo.jpg"WIDTH="240"HEIGHT="200"BORDER="2"><br>\
+    <h3><font color="green">\
+    <IMG SRC="http://esp8266.fancon.cz/common/hyg.gif"WIDTH="64"HEIGHT="64"><br>\
+    <input style="text-align: center"type="text"size=4 name="j"value="'..humi..'"> % of relative humidity<br><br>\
+    <IMG SRC="http://esp8266.fancon.cz/common/tmp.gif"WIDTH="64"HEIGHT="64"><br>\
+    <input style="text-align: center"type="text"size=4 name="p"value="'..temp..'"> Temperature grade C<br>\
+    <input style="text-align: center"type="text"size=4 name="p"value="'..fare..'"> Temperature grade F</font></h3>\
+    </body></html>') end
+    conn:on("sent",function(conn) conn:close() end)
+    end)
+end)
